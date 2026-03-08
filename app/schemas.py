@@ -36,3 +36,16 @@ class LimitRuleOut(LimitRuleCreate):
         from_attributes=True
 class TokenData(BaseModel):
     id:Optional[int] = None
+
+
+class RequestLogCreate(BaseModel):
+    user_id: int
+    endpoint: str
+    status: str
+    timestamp: datetime
+
+class RequestLogOut(RequestLogCreate):
+    id: int
+
+    class Config:
+        from_attributes=True

@@ -6,6 +6,7 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from . import models, database
 from .schemas import TokenData
+from requests import Request
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -37,6 +38,7 @@ def verify_access_token(token: str, credential_exceptions):
 
 
 def get_current_user(
+    request:Request,
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(database.get_db)
 ):
@@ -49,6 +51,8 @@ def get_current_user(
     token_data = verify_access_token(token, credential_exceptions)
 
     user = db.query(models.User).filter(models.User.id == token_data.id).first()
+
+    request.user.state = user
 
     if user is None:
         raise credential_exceptions

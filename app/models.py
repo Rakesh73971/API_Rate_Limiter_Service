@@ -28,4 +28,5 @@ class RequestLog(Base):
     user_id = Column(Integer,nullable=False)
     endpoint = Column(String,nullable=False)
     status = Column(String,nullable=False)
+    method = Column(String)
     timestamp = Column(TIMESTAMP(timezone=True),nullable=False,server_default=text('now()'))

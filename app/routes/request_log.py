@@ -7,16 +7,27 @@ from typing import List
 
 
 router = APIRouter(
-    prefix='/requestlogs',
+    prefix='/request_logs',
     tags=['RequestLogs']
 )
 
-@router.post('/',status_code=status.HTTP_201_CREATED,response_model=schemas.RequestLogCreate)
-def create_requestlog(requestlog:schemas.RequestLogCreate,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
-    request_log = models.RequestLog(**requestlog.dict())
+@router.post("/", status_code=status.HTTP_201_CREATED)
+def create_requestlog(
+    requestlog: schemas.RequestLogCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    print("current user:",current_user)
+    request_log = models.RequestLog(
+        user_id=current_user.id,
+        endpoint=requestlog.endpoint,
+        status=requestlog.status
+    )
+
     db.add(request_log)
     db.commit()
     db.refresh(request_log)
+
     return request_log
 
 @router.get('/',status_code=status.HTTP_200_OK,response_model=List[schemas.RequestLogOut])

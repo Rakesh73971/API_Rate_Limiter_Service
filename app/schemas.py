@@ -7,7 +7,7 @@ class UserCreate(BaseModel):
     full_name: str
     email: EmailStr
     password: str
-    role: str
+    role:Optional[str] = None
     
 class UserOut(BaseModel):
     id: int
@@ -39,13 +39,14 @@ class TokenData(BaseModel):
 
 
 class RequestLogCreate(BaseModel):
-    user_id: int
     endpoint: str
     status: str
-    timestamp: datetime
+    
 
 class RequestLogOut(RequestLogCreate):
     id: int
+    user_id: int
+    timestamp: datetime
 
     class Config:
         from_attributes=True

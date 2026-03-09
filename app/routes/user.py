@@ -5,11 +5,37 @@ from .. import utils
 from app.database import get_db
 from app.schemas import UserCreate,UserOut,UserUpdate
 from ..oauth2 import get_current_user
+from ..services.rate_limit_service import get_rate_limit_rule,rate_limiter
+from ..redis_limiter import check_rate_limit
 
 router = APIRouter(
     prefix='/users',
     tags=['Users']
 )
+
+
+@router.get("/profile")
+def get_profile(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+    dependencies=[Depends(rate_limiter)]
+):
+
+    rule = get_rate_limit_rule(db, current_user.role)
+
+    if not rule:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Rate limit rule not found"
+        )
+
+    check_rate_limit(
+        user_id=current_user.id,
+        limit=rule.requests_limit,
+        window=rule.time_window
+    )
+
+    return {"message": "User profile"}
 
 @router.post('/',status_code=status.HTTP_201_CREATED,response_model=UserOut)
 def create_user(user:UserCreate,db:Session=Depends(get_db)):
@@ -43,3 +69,25 @@ def update_user(id:int,user:UserUpdate,db:Session=Depends(get_db),current_user=D
     db_user.update(user.dict(exclude_unset=True),synchronize_session=False)
     db.commit()
     return db_user.first()
+
+@router.get("/profile")
+def get_profile(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+
+    rule = get_rate_limit_rule(db, current_user.role)
+
+    if not rule:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Rate limit rule not found"
+        )
+
+    check_rate_limit(
+        user_id=current_user.id,
+        limit=rule.requests_limit,
+        window=rule.time_window
+    )
+
+    return {"message": "User profile"}

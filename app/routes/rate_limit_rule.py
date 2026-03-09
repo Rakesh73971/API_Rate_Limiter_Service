@@ -4,13 +4,15 @@ from ..database import get_db
 from ..oauth2 import get_current_user
 from .. import schemas,models
 from typing import List
+from ..services.rate_limit_service import rate_limiter
 
 
 
 
 router = APIRouter(
     prefix='/rate_limit_rules',
-    tags=['Rate_Limit_Rules']
+    tags=['Rate_Limit_Rules'],
+    dependencies=[Depends(rate_limiter)]
 )
 
 @router.post('/',status_code=status.HTTP_202_ACCEPTED,response_model=schemas.LimitRuleOut)

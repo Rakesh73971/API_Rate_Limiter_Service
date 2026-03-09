@@ -4,11 +4,12 @@ from ..database import get_db
 from .. import models,schemas
 from ..oauth2 import get_current_user
 from typing import List
-
+from ..services.rate_limit_service import rate_limiter
 
 router = APIRouter(
     prefix='/request_logs',
-    tags=['RequestLogs']
+    tags=['RequestLogs'],
+    dependencies=[Depends(rate_limiter)]
 )
 
 @router.post("/", status_code=status.HTTP_201_CREATED)

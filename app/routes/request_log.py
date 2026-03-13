@@ -12,9 +12,9 @@ router = APIRouter(
     dependencies=[Depends(rate_limiter)]
 )
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED,response_model=schemas.RequestLogResponse)
 def create_requestlog(
-    requestlog: schemas.RequestLogCreate,
+    requestlog: schemas.RequestLogBase,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -31,12 +31,12 @@ def create_requestlog(
 
     return request_log
 
-@router.get('/',status_code=status.HTTP_200_OK,response_model=List[schemas.RequestLogOut])
+@router.get('/',status_code=status.HTTP_200_OK,response_model=List[schemas.RequestLogResponse])
 def get_request_logs(db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     request_logs = db.query(models.RequestLog).all()
     return request_logs
 
-@router.get('/{id}',status_code=status.HTTP_200_OK,response_model=schemas.RequestLogOut)
+@router.get('/{id}',status_code=status.HTTP_200_OK,response_model=schemas.RequestLogBase)
 def get_request_log(id:int,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     request_log = db.query(models.RequestLog).filter(models.RequestLog.id == id).first()
     if request_log is None:
@@ -44,8 +44,8 @@ def get_request_log(id:int,db:Session=Depends(get_db),current_user=Depends(get_c
     return request_log
 
 
-@router.put('/{id}',status_code=status.HTTP_202_ACCEPTED,response_model=schemas.RequestLogOut)
-def update_request_log(id:int,request_log:schemas.RequestLogCreate,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
+@router.put('/{id}',status_code=status.HTTP_202_ACCEPTED,response_model=schemas.RequestLogBase)
+def update_request_log(id:int,request_log:schemas.RequestLogBase,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     db_request_log = db.query(models.RequestLog).filter(models.RequestLog.id == id)
     if db_request_log.first() is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f'id with {id} requrest log not found')

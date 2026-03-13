@@ -3,13 +3,13 @@ from datetime import datetime
 from typing import Optional
 
 
-class UserCreate(BaseModel):
+class UserBase(BaseModel):
     full_name: str
     email: EmailStr
     password: str
     role:Optional[str] = None
     
-class UserOut(BaseModel):
+class UserResponse(BaseModel):
     id: int
     full_name: str
     email: EmailStr
@@ -24,12 +24,12 @@ class UserUpdate(BaseModel):
     email:Optional[EmailStr] = None
     role:Optional[str] = None
 
-class LimitRuleCreate(BaseModel):
+class LimitRuleBase(BaseModel):
     role: str
     requests_limit: int
     time_window: int
 
-class LimitRuleOut(LimitRuleCreate):
+class LimitRuleResponse(LimitRuleBase):
     id: int
 
     class Config:
@@ -38,12 +38,12 @@ class TokenData(BaseModel):
     id:Optional[int] = None
 
 
-class RequestLogCreate(BaseModel):
+class RequestLogBase(BaseModel):
     endpoint: str
     status: str
     
 
-class RequestLogOut(RequestLogCreate):
+class RequestLogResponse(RequestLogBase):
     id: int
     user_id: int
     timestamp: datetime

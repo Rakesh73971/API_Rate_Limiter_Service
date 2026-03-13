@@ -16,7 +16,7 @@ router = APIRouter(
 )
 
 @router.post('/',status_code=status.HTTP_202_ACCEPTED,response_model=schemas.LimitRuleOut)
-def create_limit_rule(rule:schemas.LimitRuleCreate,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
+def create_limit_rule(rule:schemas.LimitRuleBase,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     limit_rule = models.RateLimitRule(**rule.dict())
     db.add(limit_rule)
     db.commit()
@@ -24,13 +24,13 @@ def create_limit_rule(rule:schemas.LimitRuleCreate,db:Session=Depends(get_db),cu
     return limit_rule
 
 
-@router.get('/',status_code=status.HTTP_200_OK,response_model=List[schemas.LimitRuleOut])
+@router.get('/',status_code=status.HTTP_200_OK,response_model=List[schemas.LimitRuleResponse])
 def get_rate_limites(db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     rate_limits=db.query(models.RateLimitRule).all()
     return rate_limits
 
 
-@router.get('/{id}',status_code=status.HTTP_200_OK,response_model=schemas.LimitRuleOut)
+@router.get('/{id}',status_code=status.HTTP_200_OK,response_model=schemas.LimitRuleResponse)
 def get_rate_limit(id:int,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     rate_limit = db.query(models.RateLimitRule).filter(models.RateLimitRule.id == id).first()
     if rate_limit is None:
@@ -38,8 +38,8 @@ def get_rate_limit(id:int,db:Session=Depends(get_db),current_user=Depends(get_cu
     return rate_limit
 
 
-@router.put('/{id}',status_code=status.HTTP_404_NOT_FOUND,response_model=schemas.LimitRuleOut)
-def update_rate_limit(id:int,rate_limit:schemas.LimitRuleCreate,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
+@router.put('/{id}',status_code=status.HTTP_404_NOT_FOUND,response_model=schemas.LimitRuleBase)
+def update_rate_limit(id:int,rate_limit:schemas.LimitRuleBase,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     db_rate_limit = db.query(models.RateLimitRule).filter(models.RateLimitRule.id == id)
     if db_rate_limit.first() is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='id with rate limit not found')

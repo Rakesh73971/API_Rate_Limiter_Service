@@ -13,6 +13,3 @@ redis_client = redis.Redis(
 
 def get_redis():
     return redis_client
-
-redis_client.set("test_key", "hello")
-print(redis_client.get("test_key"))

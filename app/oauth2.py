@@ -58,3 +58,11 @@ def get_current_user(
         raise credential_exceptions
 
     return user
+
+def check_admin_role(current_user = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have administrative privileges to perform this action"
+        )
+    return current_user

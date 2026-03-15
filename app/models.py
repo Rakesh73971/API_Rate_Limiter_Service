@@ -32,6 +32,6 @@ class RequestLog(Base):
     id = Column(Integer,primary_key=True,nullable=False)
     user_id = Column(Integer,nullable=True)
     endpoint = Column(String,nullable=False)
-    status_code = Column(String,nullable=False)
+    status_code = Column(Integer,nullable=False)
     method = Column(String,nullable=True)
     timestamp = Column(TIMESTAMP(timezone=True),nullable=False,server_default=text('now()'))

@@ -38,15 +38,17 @@ class TokenData(BaseModel):
     id:Optional[int] = None
 
 
+from typing import Optional # Add this import at the top
+
 class RequestLogBase(BaseModel):
     endpoint: str
-    status: str
-    
+    status_code: int
+    method: Optional[str] = None 
 
 class RequestLogResponse(RequestLogBase):
     id: int
-    user_id: int
+    user_id: Optional[int] 
     timestamp: datetime
 
     class Config:
-        from_attributes=True
+        from_attributes = True

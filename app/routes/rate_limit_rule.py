@@ -1,7 +1,7 @@
 from fastapi import APIRouter,status,Depends,HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..oauth2 import get_current_user
+from ..oauth2 import get_current_user,check_admin_role
 from .. import schemas,models
 from typing import List
 from ..services.rate_limit_service import rate_limiter
@@ -12,10 +12,10 @@ from ..services.rate_limit_service import rate_limiter
 router = APIRouter(
     prefix='/rate_limit_rules',
     tags=['Rate_Limit_Rules'],
-    dependencies=[Depends(rate_limiter)]
+    dependencies=[Depends(rate_limiter),Depends(check_admin_role)]
 )
 
-@router.post('/',status_code=status.HTTP_202_ACCEPTED,response_model=schemas.LimitRuleResponse)
+@router.post('/',status_code=status.HTTP_201_CREATED,response_model=schemas.LimitRuleResponse)
 def create_limit_rule(rule:schemas.LimitRuleBase,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     limit_rule = models.RateLimitRule(**rule.dict())
     db.add(limit_rule)
@@ -38,12 +38,12 @@ def get_rate_limit(id:int,db:Session=Depends(get_db),current_user=Depends(get_cu
     return rate_limit
 
 
-@router.put('/{id}',status_code=status.HTTP_404_NOT_FOUND,response_model=schemas.LimitRuleBase)
+@router.put('/{id}',status_code=status.HTTP_202_ACCEPTED,response_model=schemas.LimitRuleBase)
 def update_rate_limit(id:int,rate_limit:schemas.LimitRuleBase,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     db_rate_limit = db.query(models.RateLimitRule).filter(models.RateLimitRule.id == id)
     if db_rate_limit.first() is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='id with rate limit not found')
-    db_rate_limit.update(rate_limit)
+    db_rate_limit.update(rate_limit.model_dump())
     db.commit()
     return db_rate_limit.first()
 

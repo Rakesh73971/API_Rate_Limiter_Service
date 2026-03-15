@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from .. import utils
 from app.database import get_db
-from app.schemas import UserCreate,UserOut,UserUpdate
+from app.schemas import UserBase,UserResponse,UserUpdate
 from ..oauth2 import get_current_user
 from ..services.rate_limit_service import get_rate_limit_rule,rate_limiter
 from ..redis_limiter import check_rate_limit
@@ -37,8 +37,8 @@ def get_profile(
 
     return {"message": "User profile"}
 
-@router.post('/',status_code=status.HTTP_201_CREATED,response_model=UserOut)
-def create_user(user:UserCreate,db:Session=Depends(get_db)):
+@router.post('/',status_code=status.HTTP_201_CREATED,response_model=UserResponse)
+def create_user(user:UserBase,db:Session=Depends(get_db)):
     hashed_password = utils.hash_password(user.password)
     user.password = hashed_password
     user = models.User(**user.dict())
@@ -47,7 +47,7 @@ def create_user(user:UserCreate,db:Session=Depends(get_db)):
     db.refresh(user)
     return user
 
-@router.get('/{id}',status_code=status.HTTP_200_OK,response_model=UserOut)
+@router.get('/{id}',status_code=status.HTTP_200_OK,response_model=UserResponse)
 def get_user(id:int,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     user = db.query(models.User).filter(models.User.id == id).first()
 
@@ -58,7 +58,7 @@ def get_user(id:int,db:Session=Depends(get_db),current_user=Depends(get_current_
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='user not found')
     return user
 
-@router.patch('/{id}',status_code=status.HTTP_202_ACCEPTED,response_model=UserOut)
+@router.patch('/{id}',status_code=status.HTTP_202_ACCEPTED,response_model=UserResponse)
 def update_user(id:int,user:UserUpdate,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     db_user = db.query(models.User).filter(models.User.id == id)
 

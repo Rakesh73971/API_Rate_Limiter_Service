@@ -15,7 +15,7 @@ router = APIRouter(
     dependencies=[Depends(rate_limiter)]
 )
 
-@router.post('/',status_code=status.HTTP_202_ACCEPTED,response_model=schemas.LimitRuleOut)
+@router.post('/',status_code=status.HTTP_202_ACCEPTED,response_model=schemas.LimitRuleResponse)
 def create_limit_rule(rule:schemas.LimitRuleBase,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
     limit_rule = models.RateLimitRule(**rule.dict())
     db.add(limit_rule)

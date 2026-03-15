@@ -6,7 +6,7 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from . import models, database
 from .schemas import TokenData
-from requests import Request
+from fastapi import Request
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 

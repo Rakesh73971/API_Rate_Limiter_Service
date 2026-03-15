@@ -1,6 +1,11 @@
 from .database import Base
+from enum import Enum as PyEnum
 from sqlalchemy import Column,Integer,String,TIMESTAMP,text
 
+class UserRole(str,PyEnum):
+    FREE = "free"
+    PRO = "pro"
+    ADMIN = "admin"
 
 class User(Base):
     __tablename__="users"
@@ -9,7 +14,7 @@ class User(Base):
     full_name = Column(String,nullable=False)
     email = Column(String,unique=True,nullable=False)
     password = Column(String,nullable=False)
-    role = Column(String,default='free')
+    role = Column(String,default='free',nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     
 
@@ -27,6 +32,6 @@ class RequestLog(Base):
     id = Column(Integer,primary_key=True,nullable=False)
     user_id = Column(Integer,nullable=True)
     endpoint = Column(String,nullable=False)
-    status = Column(String,nullable=False)
+    status_code = Column(String,nullable=False)
     method = Column(String,nullable=True)
     timestamp = Column(TIMESTAMP(timezone=True),nullable=False,server_default=text('now()'))

@@ -25,8 +25,8 @@ class RequestLog(Base):
     __tablename__="request_logs"
 
     id = Column(Integer,primary_key=True,nullable=False)
-    user_id = Column(Integer,nullable=False)
+    user_id = Column(Integer,nullable=True)
     endpoint = Column(String,nullable=False)
     status = Column(String,nullable=False)
-    method = Column(String)
+    method = Column(String,nullable=True)
     timestamp = Column(TIMESTAMP(timezone=True),nullable=False,server_default=text('now()'))

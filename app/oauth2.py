@@ -52,7 +52,7 @@ def get_current_user(
 
     user = db.query(models.User).filter(models.User.id == token_data.id).first()
 
-    request.user.state = user
+    request.state.user = user
 
     if user is None:
         raise credential_exceptions

@@ -41,7 +41,7 @@ def get_profile(
 def create_user(user:UserBase,db:Session=Depends(get_db)):
     hashed_password = utils.hash_password(user.password)
     user.password = hashed_password
-    user = models.User(**user.dict())
+    user = models.User(**user.model_dump())
     db.add(user)
     db.commit()
     db.refresh(user)

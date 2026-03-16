@@ -60,14 +60,28 @@ def get_user(id: int, db: Session = Depends(get_db), current_user = Depends(get_
 
     return user
 
-@router.patch('/{id}',status_code=status.HTTP_202_ACCEPTED,response_model=UserResponse)
-def update_user(id:int,user:UserUpdate,db:Session=Depends(get_db),current_user=Depends(get_current_user)):
-    db_user = db.query(models.User).filter(models.User.id == id)
+@router.patch('/{id}', status_code=status.HTTP_202_ACCEPTED, response_model=UserResponse)
+def update_user(
+    id: int,
+    user: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
 
-    if db_user.first() is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='User not found')
-    if db_user.first().id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail='Not allowed')
-    db_user.update(user.dict(exclude_unset=True),synchronize_session=False)
+    db_user = db.query(models.User).filter(models.User.id == id).first()
+
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if db_user.id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not allowed")
+
+    update_data = user.model_dump(exclude_unset=True)
+
+    for key, value in update_data.items():
+        setattr(db_user, key, value)
+
     db.commit()
-    return db_user.first()
+    db.refresh(db_user)
+
+    return db_user

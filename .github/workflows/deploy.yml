@@ -1,21 +1,32 @@
-name: Build and Test API Rate Limiter
+name: Build and Deploy Code
 
-on:
-  push:
-    branches: ["main", "master"]
-  pull_request:
-    branches: ["main", "master"]
+on: [push, pull_request]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  job1:
+    environment:
+      name: testing
+
+    env:
+      DATABASE_HOSTNAME: ${{ secrets.DATABASE_HOSTNAME }}
+      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+      DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ALGORITHM: ${{ secrets.ALGORITHM }}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
+
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      REDIS_PORT: ${{ secrets.REDIS_PORT }}
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres
         env:
-          POSTGRES_PASSWORD: password123
-          POSTGRES_DB: api_rate_test
+          POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DATABASE_NAME }}_test
         ports:
           - 5432:5432
         options: >-
@@ -25,43 +36,35 @@ jobs:
           --health-retries 5
 
       redis:
-        image: redis:7-alpine
+        image: redis
+        env:
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
         ports:
-          - 6379:6379
+          - 16060:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    runs-on: ubuntu-latest
 
-      - name: Install python
-        uses: actions/setup-python@v5
+    steps:
+      - name: Pulling git repo
+        uses: actions/checkout@v2
+
+      - name: Install Python
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.12"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      - name: Create Temporary .env File
+      - name: Run tests with pytest
         run: |
-          touch .env
-          echo "DATABASE_HOSTNAME=localhost" >> .env
-          echo "DATABASE_PORT=5432" >> .env
-          echo "DATABASE_PASSWORD=password123" >> .env
-          echo "DATABASE_NAME=api_rate_test" >> .env
-          echo "DATABASE_USERNAME=postgres" >> .env
-          echo "SECRET_KEY=09d5711064a48975323a61d4f122d23b925c0d393235433" >> .env
-          echo "ALGORITHM=HS256" >> .env
-          echo "ACCESS_TOKEN_EXPIRE_MINUTES=30" >> .env
-          echo "REDIS_HOST=localhost" >> .env
-          echo "REDIS_PORT=6379" >> .env
-          echo "REDIS_PASSWORD=optional_pass" >> .env
-
-      - name: Run Pytest
-        run: pytest
+          pip install pytest
+          pytest

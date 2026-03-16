@@ -4,21 +4,23 @@ on: [push, pull_request]
 
 jobs:
   job1:
+    runs-on: ubuntu-latest
     environment:
       name: testing
 
+    
     env:
-      DATABASE_HOSTNAME: ${{ secrets.DATABASE_HOSTNAME }}
-      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+      DATABASE_HOSTNAME: localhost
+      DATABASE_PORT: 5432
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-      DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+      DATABASE_NAME: ${{ secrets.DATABASE_NAME }}_test
       DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       ALGORITHM: ${{ secrets.ALGORITHM }}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
-
-      REDIS_HOST: ${{ secrets.REDIS_HOST }}
-      REDIS_PORT: ${{ secrets.REDIS_PORT }}
+      
+      REDIS_HOST: localhost
+      REDIS_PORT: 16060
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
 
     services:
@@ -27,6 +29,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           POSTGRES_DB: ${{ secrets.DATABASE_NAME }}_test
+          POSTGRES_USER: ${{ secrets.DATABASE_USERNAME }}
         ports:
           - 5432:5432
         options: >-
@@ -42,29 +45,26 @@ jobs:
         ports:
           - 16060:6379
         options: >-
-          --health-cmd "redis-cli ping"
+          --health-cmd "redis-cli -a '${{ secrets.REDIS_PASSWORD }}' ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
-    runs-on: ubuntu-latest
-
     steps:
       - name: Pulling git repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
+          cache: 'pip'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
 
       - name: Run tests with pytest
-        run: |
-          pip install pytest
-          pytest
+        run: pytest

@@ -38,7 +38,6 @@ class TokenData(BaseModel):
     id:Optional[int] = None
 
 
-from typing import Optional # Add this import at the top
 
 class RequestLogBase(BaseModel):
     endpoint: str

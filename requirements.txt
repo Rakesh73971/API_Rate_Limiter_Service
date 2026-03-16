@@ -36,6 +36,7 @@ httpx
 redis
 requests
 alembic
+pytest
 python-jose[cryptography]
 passlib[bcrypt]
 psycopg2-binary

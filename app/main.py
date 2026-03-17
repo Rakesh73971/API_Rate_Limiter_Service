@@ -6,7 +6,6 @@ from .middleware.request_logger import RequestLoggerMiddleware
 
 app = FastAPI()
 
-models.Base.metadata.create_all(bind=engine)
 
 
 app.add_middleware(RequestLoggerMiddleware)

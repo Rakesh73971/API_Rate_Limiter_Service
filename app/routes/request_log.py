@@ -1,11 +1,13 @@
-from fastapi import APIRouter,Depends,status,HTTPException
+from fastapi import APIRouter,Depends,status,HTTPException,Query
 from sqlalchemy.orm import Session
 from ..database import get_db
 from .. import models,schemas
 from ..oauth2 import get_current_user,check_admin_role
-from typing import List
+from typing import List,Optional
 from sqlalchemy import func,text
 from ..services.rate_limit_service import rate_limiter
+from sqlalchemy import asc,desc
+import math
 
 router = APIRouter(
     prefix='/request_logs',
@@ -33,9 +35,33 @@ def create_requestlog(
     return request_log
 
 @router.get('/',status_code=status.HTTP_200_OK,response_model=List[schemas.RequestLogResponse])
-def get_request_logs(db:Session=Depends(get_db),current_user=Depends(check_admin_role)):
-    request_logs = db.query(models.RequestLog).all()
-    return request_logs
+def get_request_logs(db:Session=Depends(get_db),current_user=Depends(check_admin_role),limit:int=Query(1,ge=1,le=10),page:int=Query(1,ge=1),search:Optional[str]="",sort_by:str=Query('id'),order:str=Query('asc')):
+    sort_fields = {
+        'id':models.RequestLog.id,
+        'status_code':models.RequestLog.status_code,
+        'method':models.RequestLog.method
+    }
+
+    query = db.query(models.RequestLog).filter(models.RequestLog.endpoint.contains(search))
+
+    total = query.count()
+    total_pages = math.ceil(total/limit)
+    offset = (page-1) * limit
+
+    sort_column = sort_fields.get(sort_by,models.RequestLog.id)
+
+    if order == 'desc':
+        query = query.order_by(desc(sort_column))
+    else:
+        query = query.order_by(asc(sort_column))
+
+    request_logs = query.limit(limit).offset(offset).all()
+    return {
+        'data':request_logs,
+        'total':total,
+        'page':page,
+        'total_pages':total_pages
+    }
 
 @router.get('/{id}',status_code=status.HTTP_200_OK,response_model=schemas.RequestLogBase)
 def get_request_log(id:int,db:Session=Depends(get_db),current_user=Depends(check_admin_role)):
@@ -73,17 +99,17 @@ def get_rate_limit_summary(
     db: Session = Depends(get_db), 
     current_user = Depends(check_admin_role)
 ):
-    # 1. Total Requests Blocked (429s)
+    
     total_blocked = db.query(models.RequestLog).filter(
         models.RequestLog.status_code == 429
     ).count()
 
-    # 2. Total Requests Allowed (200s, 201s, etc.)
+    
     total_allowed = db.query(models.RequestLog).filter(
         models.RequestLog.status_code < 400
     ).count()
 
-    # 3. Most Targeted Endpoint (Where do people hit the limit most?)
+    
     most_targeted = db.query(
         models.RequestLog.endpoint, 
         func.count(models.RequestLog.id).label('count')

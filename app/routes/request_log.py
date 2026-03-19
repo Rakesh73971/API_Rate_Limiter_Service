@@ -34,7 +34,7 @@ def create_requestlog(
 
     return request_log
 
-@router.get('/',status_code=status.HTTP_200_OK,response_model=List[schemas.RequestLogResponse])
+@router.get('/',status_code=status.HTTP_200_OK,response_model=schemas.RequestLogPaginationResponse)
 def get_request_logs(db:Session=Depends(get_db),current_user=Depends(check_admin_role),limit:int=Query(1,ge=1,le=10),page:int=Query(1,ge=1),search:Optional[str]="",sort_by:str=Query('id'),order:str=Query('asc')):
     sort_fields = {
         'id':models.RequestLog.id,
@@ -60,7 +60,7 @@ def get_request_logs(db:Session=Depends(get_db),current_user=Depends(check_admin
         'data':request_logs,
         'total':total,
         'page':page,
-        'total_pages':total_pages
+        'totalPages':total_pages
     }
 
 @router.get('/{id}',status_code=status.HTTP_200_OK,response_model=schemas.RequestLogBase)

@@ -1,6 +1,6 @@
 from pydantic import BaseModel,EmailStr
 from datetime import datetime
-from typing import Optional
+from typing import Optional,List
 
 
 class UserBase(BaseModel):
@@ -34,6 +34,16 @@ class LimitRuleResponse(LimitRuleBase):
 
     class Config:
         from_attributes=True
+
+class LimitRulePaginationResponse(BaseModel):
+    data: List[LimitRuleResponse]
+    total: int
+    page: int
+    totalPages: int
+
+    class Config:
+        from_attributes = True
+
 class TokenData(BaseModel):
     id:Optional[int] = None
 
@@ -48,6 +58,15 @@ class RequestLogResponse(RequestLogBase):
     id: int
     user_id: Optional[int] 
     timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+class RequestLogPaginationResponse(BaseModel):
+    data: List[RequestLogResponse]
+    total: int
+    page: int
+    totalPages: int
 
     class Config:
         from_attributes = True

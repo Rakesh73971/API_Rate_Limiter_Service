@@ -26,7 +26,7 @@ def create_limit_rule(rule:schemas.LimitRuleBase,db:Session=Depends(get_db),curr
     return limit_rule
 
 
-@router.get('/',status_code=status.HTTP_200_OK,response_model=List[schemas.LimitRuleResponse])
+@router.get('/',status_code=status.HTTP_200_OK,response_model=schemas.LimitRulePaginationResponse)
 def get_rate_limites(db:Session=Depends(get_db),current_user=Depends(get_current_user),limit:int=Query(10,ge=1,le=10),page:int=Query(1,ge=1),search:Optional[str]="",sort_by:str=Query('id'),order:str=Query('asc')):
     sort_fields = {
         'id':models.RateLimitRule.id,
@@ -46,12 +46,12 @@ def get_rate_limites(db:Session=Depends(get_db),current_user=Depends(get_current
     else:
         query = query.order_by(asc(sort_column))
     ratelimit_rule = query.limit(limit).offset(offset).all()
-    
+
     return {
         'data':ratelimit_rule,
         'total':total,
         'page':page,
-        'total_pages':total_pages
+        'totalPages':total_pages
     }
 
 

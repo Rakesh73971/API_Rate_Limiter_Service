@@ -1,10 +1,12 @@
-from fastapi import APIRouter,status,Depends,HTTPException
+from fastapi import APIRouter,status,Depends,HTTPException,Query
 from sqlalchemy.orm import Session
+from sqlalchemy import asc,desc
 from ..database import get_db
 from ..oauth2 import get_current_user,check_admin_role
 from .. import schemas,models
-from typing import List
+from typing import List,Optional
 from ..services.rate_limit_service import rate_limiter
+import math
 
 
 
@@ -25,9 +27,32 @@ def create_limit_rule(rule:schemas.LimitRuleBase,db:Session=Depends(get_db),curr
 
 
 @router.get('/',status_code=status.HTTP_200_OK,response_model=List[schemas.LimitRuleResponse])
-def get_rate_limites(db:Session=Depends(get_db),current_user=Depends(get_current_user)):
-    rate_limits=db.query(models.RateLimitRule).all()
-    return rate_limits
+def get_rate_limites(db:Session=Depends(get_db),current_user=Depends(get_current_user),limit:int=Query(10,ge=1,le=10),page:int=Query(1,ge=1),search:Optional[str]="",sort_by:str=Query('id'),order:str=Query('asc')):
+    sort_fields = {
+        'id':models.RateLimitRule.id,
+        'role':models.RateLimitRule.role,
+        'requests_limit':models.RateLimitRule.requests_limit
+    }
+    query = db.query(models.RateLimitRule).filter(models.RateLimitRule.role.contains(search))
+
+    total = query.count()
+    total_pages = math.ceil(total/limit)
+    offset = (page-1) * limit
+
+    sort_column = sort_fields.get(sort_by,models.RateLimitRule.id)
+
+    if order == 'desc':
+        query = query.order_by(desc(sort_column))
+    else:
+        query = query.order_by(asc(sort_column))
+    ratelimit_rule = query.limit(limit).offset(offset).all()
+    
+    return {
+        'data':ratelimit_rule,
+        'total':total,
+        'page':page,
+        'total_pages':total_pages
+    }
 
 
 @router.get('/{id}',status_code=status.HTTP_200_OK,response_model=schemas.LimitRuleResponse)
